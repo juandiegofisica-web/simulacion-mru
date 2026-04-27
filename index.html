@@ -93,6 +93,11 @@ let running = false;
 let car = new Image();
 car.src = "carro.png";
 
+// 🔥 CLAVE: mostrar carro desde el inicio
+car.onload = function() {
+  draw();
+};
+
 function start(){
   running = true;
   loop();
@@ -161,17 +166,18 @@ function draw(){
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // 🚗 CARRO MÁS PEQUEÑO
+  // 🚗 CARRO (más pequeño)
   if(car.complete){
     ctx.drawImage(car, x*6, 135, 140, 55);
   }
 
-  // ⏱️ SOLO TIEMPO EXPERIMENTAL
+  // ⏱️ Solo tiempo experimental
   document.getElementById("info").innerHTML =
     "Tiempo medido: " + t_real.toFixed(2) + " s";
 
 }
 
+// También dibuja por si acaso antes de cargar imagen
 draw();
 
 </script>
