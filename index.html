@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio MRU 2.0</title>
+<style>
+body{margin:0;font-family:Segoe UI,sans-serif;background:linear-gradient(135deg,#4facfe,#00f2fe);text-align:center}
+.container{max-width:1200px;margin:auto;padding:20px}
+.card{background:#fff;padding:20px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+input,select{padding:6px;border-radius:6px;border:1px solid #ccc;width:90px}
+button{padding:10px 15px;margin:5px;border:none;border-radius:8px;background:#1976d2;color:#fff;cursor:pointer}
+button:hover{background:#0d47a1}
+canvas{margin-top:20px;border-radius:12px}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="card">
+<h2>🚗 Laboratorio MRU 2.0</h2>
+
+Distancia (m):
+<input id="dist" type="number" value="20.00" min="0.01" step="0.01">
+
+Velocidad (m/s):
+<input id="vel" type="number" value="5.00" min="0.01" step="0.01">
+
+Tiempo (s):
+<input id="tiempo" type="number" value="4.00" min="0.01" step="0.01">
+
+<br><br>
+
+Variable calculada:
+<select id="modo" onchange="actualizarModo()">
+<option value="t">Tiempo</option>
+<option value="d">Distancia</option>
+<option value="v">Velocidad</option>
+</select>
+
+<br><br>
+
+<button onclick="start()">▶ Iniciar</button>
+<button onclick="pause()">⏸ Pausar</button>
+<button onclick="resetSim()">🔁 Reiniciar</button>
+
+<p id="info"></p>
+
+</div>
+
+<canvas id="sim" width="1100" height="300"></canvas>
+</div>
+
+<script>
+const sim=document.getElementById("sim");
+const ctx=sim.getContext("2d");
+const dist=document.getElementById("dist");
+const vel=document.getElementById("vel");
+const tiempo=document.getElementById("tiempo");
+const modo=document.getElementById("modo");
+const info=document.getElementById("info");
+
+let tAnim=0,running=false;
+
+const car=new Image();
+car.src="carro.png";
+car.onload=()=>{actualizarModo();draw();}
+
+const escala=11;
+const margen=120;
+const anchoAuto=65;
+const altoAuto=30;
+
+function actualizarModo(){
+dist.disabled=false;
+vel.disabled=false;
+tiempo.disabled=false;
+
+if(modo.value==="t"){
+    tiempo.disabled=true;
+    tiempo.value="";
+}
+if(modo.value==="d"){
+    dist.disabled=true;
+    dist.value="";
+}
+if(modo.value==="v"){
+    vel.disabled=true;
+    vel.value="";
+}
+info.innerHTML="";
+draw();
+}
+
+[dist,vel,tiempo].forEach(e=>e.addEventListener("input",actualizarModo));
+
+function start(){
+if(modo.value==="t"){
+    tiempo.value=(parseFloat(dist.value)/parseFloat(vel.value)).toFixed(2);
+}
+if(modo.value==="d"){
+    dist.value=(parseFloat(vel.value)*parseFloat(tiempo.value)).toFixed(2);
+}
+if(modo.value==="v"){
+    vel.value=(parseFloat(dist.value)/parseFloat(tiempo.value)).toFixed(2);
+}
+tAnim=0;
+running=true;
+loop();
+}
+function pause(){running=false;}
+function resetSim(){running=false;tAnim=0;draw();}
+
+function loop(){
+if(!running)return;
+
+let d=parseFloat(dist.value);
+let v=parseFloat(vel.value);
+let tt=parseFloat(tiempo.value);
+
+if (tAnim < tt) {
+    tAnim = Math.min(tAnim + 0.05, tt);
+} else {
+    running = false;
+}
+draw();
+requestAnimationFrame(loop);
+}
+
+function draw(){
+
+ctx.clearRect(0,0,1100,300);
+
+ctx.fillStyle="#87CEEB";
+ctx.fillRect(0,0,1100,180);
+
+ctx.fillStyle="#2e7d32";
+ctx.fillRect(0,180,1100,120);
+
+ctx.fillStyle="#424242";
+ctx.fillRect(0,200,1100,80);
+
+ctx.strokeStyle="white";
+ctx.setLineDash([20,15]);
+ctx.beginPath();
+ctx.moveTo(0,240);
+ctx.lineTo(1100,240);
+ctx.stroke();
+ctx.setLineDash([]);
+
+let d=parseFloat(dist.value);
+let v=parseFloat(vel.value);
+let tt=parseFloat(tiempo.value);
+
+let meta=d*escala+margen;
+
+ctx.strokeStyle="yellow";
+ctx.lineWidth=3;
+ctx.beginPath();
+ctx.moveTo(meta,200);
+ctx.lineTo(meta,280);
+ctx.stroke();
+
+ctx.fillStyle="black";
+ctx.fillText("META",meta-20,195);
+
+let recorrido=Math.min(v*tAnim,d);
+let frente=recorrido*escala+margen;
+let x=frente-anchoAuto;
+
+if(car.complete)ctx.drawImage(car,x,180,anchoAuto,altoAuto);
+
+ctx.fillStyle="black";
+ctx.fillRect(850,20,220,90);
+ctx.strokeStyle="#39ff14";
+ctx.strokeRect(850,20,220,90);
+ctx.fillStyle="#39ff14";
+ctx.font="18px monospace";
+ctx.textAlign="center";
+
+let titulo="",valor="";
+if(modo.value==="t"){
+titulo="TIEMPO";
+valor=tAnim.toFixed(2)+" s";
+}else if(modo.value==="d"){
+titulo="DISTANCIA";
+valor=recorrido.toFixed(2)+" m";
+}else{
+titulo="VELOCIDAD";
+valor=v.toFixed(2)+" m/s";
+}
+
+ctx.fillText(titulo,960,45);
+ctx.font="28px monospace";
+ctx.fillText(valor,960,85);
+
+
+}
+</script>
+</body>
+</html>
